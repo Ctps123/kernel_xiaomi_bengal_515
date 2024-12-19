@@ -1078,7 +1078,9 @@ static int shmem_getattr(struct user_namespace *mnt_userns,
 		shmem_recalc_inode(inode);
 		spin_unlock_irq(&info->lock);
 	}
+	inode_lock_shared(inode);
 	generic_fillattr(&init_user_ns, inode, stat);
+	inode_unlock_shared(inode);
 
 	if (shmem_is_huge(NULL, inode, 0))
 		stat->blksize = HPAGE_PMD_SIZE;
@@ -1747,6 +1749,7 @@ static int shmem_swapin_page(struct inode *inode, pgoff_t index,
 
 	/* We have to do this with page locked to prevent races */
 	lock_page(page);
+	trace_android_vh_shmem_swapin_page(page);
 	if (!PageSwapCache(page) || page_private(page) != swap.val ||
 	    !shmem_confirm_swap(mapping, index, swap)) {
 		error = -EEXIST;
